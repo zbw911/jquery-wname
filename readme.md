@@ -16,6 +16,16 @@ How use?
 			},
 			// another usual ajax options
 		});
+		
+		
+		Or
+		
+		 $(function () {
+            var url = 'http://castest.youxituan.com/cas/JsLogin';
+            $.post(url, function (d) {
+                window.alert(d);
+            }, 'wname');
+        });
 
 On success response must put answer in window.name as json. Response's example:
 
