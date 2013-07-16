@@ -10,77 +10,81 @@
  *
  */
 
-(function($) {
+(function ($) {
 
-$.ajaxPrefilter(function(opts) {
-	if(opts.files && opts.files.length) {
-		opts.type = 'POST';
-		return 'wname';
-	}
-});
+    $.ajaxPrefilter(function (opts) {
+        if (opts.files && opts.files.length) {
+            opts.type = 'POST';
+            return 'wname';
+        }
+    });
 
-var cnt = 1;
+    var cnt = 1;
 
-$.ajaxTransport('wname', function(opts, origOpts) {
-	var iframe;
-	return {
-		send : function(_, completeCallback) {
-			var id = '__target_' + (cnt++),
-				form = $('<form/>')
-					.css('display', 'none')
-					.attr({
-						action   : opts.url,
-						method   : 'post',
-						target   : id,
-						enctype  : 'multipart/form-data',
-						encoding : 'multipart/form-data'
-					});
+    $.ajaxTransport('wname', function (opts, origOpts) {
+        var iframe;
+        return {
+            send: function (_, completeCallback) {
 
-			$.each($.extend({ _wname : 1 }, origOpts.data), function(name, val) {
-				form.append($('<input/>').attr({ type : 'hidden', name : name, value : val }));
-			});
+                //debugger;
+                var id = '__target_' + (cnt++),
+                    form = $('<form/>')
+                        .css('display', 'none')
+                        .attr({
+                            action: opts.url,
+                            method: 'post',
+                            target: id,
+                            enctype: 'multipart/form-data',
+                            encoding: 'multipart/form-data'
+                        });
 
-			opts.files && opts.files.each(function() {
-				var file = $(this);
-				form.append(file.replaceWith(file.clone(true, true)));
-			});
+                $.each($.extend({ _wname: 1 }, origOpts.data), function (name, val) {
+                    form.append($('<input/>').attr({ type: 'hidden', name: name, value: val }));
+                });
 
-			iframe = $('<iframe name="' + id + '"/>')
-				.css('display', 'none')
-				.appendTo('body');
+                opts.files && opts.files.each(function () {
+                    var file = $(this);
+                    form.append(file.replaceWith(file.clone(true, true)));
+                });
 
-			form
-				.appendTo('body')
-				.submit()
-				.remove();
+                iframe = $('<iframe/>')
+                    .css('display', 'none')
+                    .appendTo('body');
+               
+                iframe[0].contentWindow.name = id;
 
-			iframe.load(function() {
-				var frameWin = iframe[0].contentWindow ||
-						(iframe[0].contentDocument && iframe[0].contentDocument.window);
+                form
+                    .appendTo('body')
+                    .submit()
+                    .remove();
 
-				iframe
-					.unbind()
-					.load(function() {
-						if(frameWin.name != id) {
-							var resp = frameWin.name;
-							iframe.remove();
-							completeCallback(200, 'OK', { wname : resp });
-						}
-						else {
-							iframe.remove();
-							completeCallback(500, 'INTERNAL_ERROR');
-						}
-					});
+                iframe.load(function () {
+                    var frameWin = iframe[0].contentWindow ||
+                            (iframe[0].contentDocument && iframe[0].contentDocument.window);
 
-				frameWin.location = 'about:blank';
-			});
+                    iframe
+                        .unbind()
+                        .load(function () {
+                            if (frameWin.name != id) {
+                                var resp = frameWin.name;
+                                iframe.remove();
+                                completeCallback(200, 'OK', { wname: resp });
+                            }
+                            else {
+                                iframe.remove();
+                                completeCallback(500, 'INTERNAL_ERROR');
+                            }
+                        });
 
-		},
+                    frameWin.location = 'about:blank';
+                });
 
-		abort : function() {
-			iframe.remove();
-		}
-	}
-});
+            },
+
+            abort: function () {
+                iframe.remove();
+            }
+        }
+    });
 
 })(jQuery);
